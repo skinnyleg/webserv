@@ -20,8 +20,9 @@ int main(int argc, char const* argv[])
 	int server_fd, new_socket, valread;
 	struct sockaddr_in6 address;
 	int opt = 1;
+	std::string header;
 	int addrlen = sizeof(address);
-	unsigned char buffer[BUFFER] = { 0 };
+	char buffer[BUFFER] = { 0 };
 	// std::string buffer;
 	std::vector<struct pollfd> pfds;
 	struct pollfd *pfds_raw;
@@ -61,7 +62,9 @@ int main(int argc, char const* argv[])
 		perror("listen");
 		exit(EXIT_FAILURE);
 	}
-	std::ofstream file("file");
+	int flag = 0;
+	int i = 0;
+	std::ofstream file;
     while (1)
     {
 		pfds_raw = pfds.data();
@@ -79,25 +82,76 @@ int main(int argc, char const* argv[])
 						perror("accept");
 						exit(EXIT_FAILURE);
 					}
+					flag = 0;
 					c.fd = new_socket;
 					c.events = POLLIN;
 					pfds.push_back(c);
-					// std::cout << "new client connected" << std::endl;
+					if (!file.is_open())
+						file.close();
+					std::cout << "new client connected" << std::endl;
 				}
 				else
 				{
 					int bytes = recv(pfds_raw[i].fd, buffer, BUFFER, 0);
 					if (bytes == 0)
 					{
-						// std::cout << "client disconnected\n";
+						std::cout << "client disconnected" << std::endl;
 						pfds.erase(pfds.begin() + i);
 					}
-					else
+					else if (bytes > 0)
 					{
-						// std::cout << " size is " <<  bytes << " ";
-						buffer[bytes] = '\0';
-						// std::cout << buffer;
-						file << buffer;
+						std::string str(buffer, bytes);
+						int res;
+						int pos = 0;
+						while (pos < str.size() && flag < 1)
+						{
+							res = str.find("\r\n", pos);
+							if (res != std::string::npos)
+							{
+								if (str[res] == '\r' && str[res + 1] == '\n')
+								{
+									res += 2;
+									if (str[res] == '\r' && str[res + 1] == '\n')
+									{
+										// std::cout << " inside if 1" << std::endl;
+										header = str.substr(0, res + 1);
+										// std::cout << "extracted header begin" << std::endl;
+										// std::cout << header << std::endl;
+										// std::cout << "extracted header end" << std::endl;
+										flag = 1;
+										str.erase(0, res + 2);
+										// std::cout << "extracted str begin" << std::endl;
+										// std::cout << str << std::endl;
+										// std::cout << "extracted str end" << std::endl;
+										// exit(1);
+										break ;
+									}
+									else
+										pos = res;
+								}
+							}
+							else
+								pos += 1;
+						}
+						if (flag == 1)
+						{
+							res = header.find("pdf");
+							if (res != std::string::npos)
+								file.open("file.pdf");
+							res = header.find("mp4");
+							if (res != std::string::npos)
+								file.open("file.mp4");
+							res = header.find("png");
+							if (res != std::string::npos)
+								file.open("file.png");
+							res = header.find("text");
+							if (res != std::string::npos)
+								file.open("file");
+							flag++;
+						}
+						// std::cout << str;
+						// std::cout.flush();
+						file << str;
 						file.flush();
 						// std::cout.flush();
 						memset(buffer, 0, BUFFER);
@@ -122,6 +176,11 @@ int main(int argc, char const* argv[])
 
 						// // Send response to client
 						// send(pfds_raw[i].fd, response.c_str(), response.size(), 0);
+					}
+					else if (bytes < 0)
+					{
+						exit(1);
+						// std::cout << "error" << std::endl;
 					}
 				}
 			}

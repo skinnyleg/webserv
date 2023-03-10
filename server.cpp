@@ -13,7 +13,8 @@
 #include <poll.h>
 #include <iostream>
 
-#define PORT 8080
+#define PORT1 8080
+#define PORT2 8081
 #define BUFFER 1024
 int main(int argc, char const* argv[])
 {
@@ -29,6 +30,7 @@ int main(int argc, char const* argv[])
 	// struct pollfd *pfds = malloc(sizeof(pfds) * fd_size)
 	// char* hello = "Hello from server";
 
+	memset(buffer, 0, BUFFER);
 	// Creating socket file descriptor
 	if ((server_fd = socket(AF_INET6, SOCK_STREAM, 0)) < 0) {
 		perror("socket failed");
@@ -49,9 +51,16 @@ int main(int argc, char const* argv[])
 	}
 	address.sin6_family = AF_INET6;
 	address.sin6_addr = in6addr_any;
-	address.sin6_port = htons(PORT);
-	memset(buffer, 0, BUFFER);
-	// Forcefully attaching socket to the port 8080
+	address.sin6_port = htons(PORT1);
+	if (bind(server_fd, (struct sockaddr*)&address,
+			sizeof(address))
+		< 0) {
+		perror("bind failed");
+		exit(EXIT_FAILURE);
+	}
+	address.sin6_family = AF_INET6;
+	address.sin6_addr = in6addr_any;
+	address.sin6_port = htons(PORT2);
 	if (bind(server_fd, (struct sockaddr*)&address,
 			sizeof(address))
 		< 0) {

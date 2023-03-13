@@ -19,6 +19,7 @@ class server
 	void lunch_servers();
 	void monitor();
 	void fill();
+	void convert();
 	void receive(int index);
 	void new_connection(int index);
 };

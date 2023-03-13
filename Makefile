@@ -2,7 +2,7 @@
 
 CC = c++
 
-CFLAGS = -Wall -Werror -Wextra -std=c++98 #-g -fsanitize=address,undefined,integer
+CFLAGS = -Wall -Werror -Wextra -std=c++98 -g -fsanitize=address,undefined,integer
 
 CFILES = main.cpp\
 		client.cpp\

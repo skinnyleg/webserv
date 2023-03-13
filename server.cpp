@@ -4,6 +4,7 @@ server::server()
 {
 	this->flag_con = 0;
 	this->poll_count = 0;
+	this->pfds_raw = NULL;
 }
 
 server::server(const server &obj)
@@ -79,12 +80,24 @@ void server::lunch_servers()
 		}
 	}
 }
+void server::convert()
+{
+	int size = this->pfds.size();
+	this->pfds_raw = new struct pollfd[size + 1];
+	for (int i = 0; i < size; i++)
+	{
+		pfds_raw[i].fd = pfds[i].fd;
+		pfds_raw[i].events = pfds[i].events;
+	}
+}
 
 void server::monitor()
 {
- 	while (1)
-    {
-		this->pfds_raw = this->pfds.data();
+	while (1)
+	{
+		if (this->pfds_raw != NULL)
+			delete [] pfds_raw;
+		this->convert();
 		this->poll_count = poll(this->pfds_raw, this->pfds.size(), -1);
 		for (size_t i = 0; i < this->pfds.size(); i++)
 		{
@@ -110,7 +123,7 @@ void server::monitor()
 				}
 			}
 		}
-    }
+	}
 }
 
 void server::new_connection(int index)

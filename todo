@@ -1,0 +1,25 @@
+Prototype of a response
+std::string request(buffer, bytes);
+
+Parse request
+std::istringstream request_stream(request);
+std::string method, uri, version;
+request_stream >> method >> uri >> version;
+std::cout << request << std::endl;
+std::cout << "method " << method << " uri " << uri << " ver " << version << std::endl;
+// Construct response
+std::string response_body = "Hello, World! how are you doing haitam?\n";
+std::ostringstream response_stream;
+response_stream << "HTTP/1.1 200 OK\r\n"
+			<< "Content-Type: text/plain\r\n"
+			<< "Content-Length: " << response_body.size() << "\r\n"
+			<< "\r\n"
+			<< response_body;
+
+std::string response = response_stream.str();
+
+// Send response to client
+send(pfds_raw[i].fd, response.c_str(), response.size(), 0);
+
+
+fix heap-buffer-overflow on line 88
